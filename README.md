@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Somax Wiki
 
-## Getting Started
+Wiki e portal público de documentação da Somax, construídos com Next.js App Router, Better Auth, Drizzle ORM, PostgreSQL, Tailwind CSS e BlockNote.
 
-First, run the development server:
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local
+npm run db:migrate
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Variáveis obrigatórias:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+DATABASE_URL=postgres://...
+BETTER_AUTH_SECRET=uma-chave-com-32-caracteres-ou-mais
+BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_ALLOWED_HOSTS=localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Se for acessar por domínio, IP da rede ou túnel, ajuste `BETTER_AUTH_URL` para a URL canônica e coloque os hosts aceitos em `BETTER_AUTH_ALLOWED_HOSTS`, separados por vírgula. Exemplo: `docs.somax.com.br,preview-*.vercel.app`.
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev       # servidor local
+npm run build     # build de produção
+npm run start     # servir build
+npm run lint      # eslint
+npm run db:generate
+npm run db:migrate
+npm run db:push
+npm run db:studio
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Wiki
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `/wiki`: painel interno com recentes, favoritos, páginas públicas e páginas sem conteúdo.
+- `/wiki/[slug]`: leitura e edição interna.
+- `/p`: portal público de documentação.
+- `/p/[slug]`: página pública publicada.
 
-## Deploy on Vercel
+Roles de workspace:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `owner` e `admin`: administram workspace e convites.
+- `editor`: cria e edita páginas.
+- `viewer`: acessa páginas internas sem editar, salvo permissão por página.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Banco
+
+As migrations ficam em `drizzle/`. A migration inicial adiciona histórico de revisões, aliases de slug, favoritos, recentes e busca full-text em português via `content_tsv`.
+
+## Uploads
+
+Uploads do editor são salvos localmente em `.uploads/` e servidos por `/api/uploads/[pageId]/[fileName]`, respeitando a visibilidade da página. Em produção serverless, troque esse armazenamento local por S3, R2, Vercel Blob ou outro storage persistente.
