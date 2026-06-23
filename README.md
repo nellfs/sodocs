@@ -55,4 +55,23 @@ As migrations ficam em `drizzle/`. A migration inicial adiciona histórico de re
 
 ## Uploads
 
-Uploads do editor são salvos localmente em `.uploads/` e servidos por `/api/uploads/[pageId]/[fileName]`, respeitando a visibilidade da página. Em produção serverless, troque esse armazenamento local por S3, R2, Vercel Blob ou outro storage persistente.
+Uploads do editor são servidos por `/api/uploads/[pageId]/[fileName]`, respeitando a visibilidade da página. O backend de armazenamento é controlado pela variável `UPLOAD_STORAGE`:
+
+| Valor | Descrição |
+|-------|-----------|
+| `local` (padrão) | Salva em `.uploads/` no filesystem |
+| `s3` | Salva em bucket S3-compatible (AWS S3, MinIO, R2, etc.) |
+
+Para usar S3, configure as variáveis abaixo no `.env.local`:
+
+```bash
+UPLOAD_STORAGE=s3
+S3_ENDPOINT=http://localhost:9000   # URL do serviço S3
+S3_REGION=us-east-1
+S3_BUCKET=sodocs-uploads
+S3_ACCESS_KEY_ID=minioadmin
+S3_SECRET_ACCESS_KEY=minioadmin
+S3_FORCE_PATH_STYLE=true            # obrigatório para MinIO e R2
+```
+
+O `docker-compose.yml` inclui um serviço MinIO para desenvolvimento local (API na porta 9000, console web na porta 9001). O bucket é criado automaticamente no primeiro upload.

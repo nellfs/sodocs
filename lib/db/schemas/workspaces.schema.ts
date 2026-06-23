@@ -39,6 +39,7 @@ export const workspaceInvitationsTable = pgTable('workspace_invitations', {
     .notNull()
     .references(() => workspacesTable.id, { onDelete: 'cascade' }),
   email: varchar('email', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }),
   role: varchar('role', { length: 50 }).notNull().default('viewer'),
   token: text('token').notNull().unique(),
   expiresAt: timestamp('expires_at').notNull(),

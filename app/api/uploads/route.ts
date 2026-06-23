@@ -1,11 +1,10 @@
-import { mkdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { NextRequest } from 'next/server'
 import { getSession } from '@/lib/auth/server'
 import { canEditPage } from '@/lib/wiki/access'
+import { getStorageBackend } from '@/lib/storage'
 
 const MAX_UPLOAD_SIZE = 100 * 1024 * 1024
-const UPLOAD_DIR = path.join(process.cwd(), '.uploads')
 
 const BLOCKED_EXTENSIONS = new Set([
   'bat',
@@ -33,7 +32,7 @@ function safeFileName(name: string) {
   const base = path
     .basename(name, path.extname(name))
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-zA-Z0-9._-]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
@@ -94,13 +93,12 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Tipo ou tamanho de arquivo não permitido' }, { status: 400 })
   }
 
-  const pageUploadDir = path.join(UPLOAD_DIR, pageId)
-  await mkdir(pageUploadDir, { recursive: true })
+  const storage = getStorageBackend()
   const bytes = Buffer.from(await file.arrayBuffer())
-  await writeFile(path.join(pageUploadDir, fileName), bytes)
+  const url = await storage.save(pageId, fileName, bytes, file.type)
 
   return Response.json({
-    url: `/api/uploads/${pageId}/${fileName}`,
+    url,
     name: file.name,
     size: file.size,
     type: file.type,

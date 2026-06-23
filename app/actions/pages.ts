@@ -835,17 +835,19 @@ export async function inviteMember(
   workspaceId: string,
   email: string,
   role: string,
+  name?: string,
 ) {
   const session = await getSession()
   if (!session || !(await isWorkspaceAdmin(workspaceId, session)))
     throw new Error('Forbidden')
 
   const token = nanoid(32)
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+  const expiresAt = new Date(Date.now() + 14 * 60 * 1000) // 14 minutes
 
   await db.insert(workspaceInvitationsTable).values({
     workspaceId,
     email,
+    name: name || null,
     role,
     token,
     expiresAt,

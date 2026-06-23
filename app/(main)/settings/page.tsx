@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth/server'
 import { getUserWorkspaces, getWorkspaceMembers } from '@/lib/wiki/queries'
 import { isWorkspaceAdmin } from '@/lib/wiki/access'
 import { InviteMemberForm } from './InviteMemberForm'
+import { LogoutButton } from './LogoutButton'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export default function SettingsPage() {
@@ -44,29 +45,46 @@ async function SettingsContent() {
       <h1 className="text-2xl font-bold">Configurações — {currentWorkspace.name}</h1>
 
       <section className="space-y-4">
+        <h2 className="text-lg font-semibold">Perfil</h2>
+        <div className="rounded-md border px-4 py-3 space-y-1">
+          <p className="text-sm font-medium">{session.user.name}</p>
+          <p className="text-xs text-muted-foreground">{session.user.email}</p>
+        </div>
+        <LogoutButton />
+      </section>
+
+      <section className="space-y-4">
         <h2 className="text-lg font-semibold">Membros</h2>
 
         <div className="rounded-md border divide-y">
-          {members.map((member) => (
-            <div key={member.id} className="flex items-center justify-between px-4 py-3">
-              <span className="min-w-0 pr-3">
-                <span className="block truncate text-sm font-medium">{member.userName}</span>
-                <span className="block truncate text-xs text-muted-foreground">{member.userEmail}</span>
-              </span>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
-                {roleLabel[member.role] ?? member.role}
-              </span>
-            </div>
-          ))}
+          {members.map((member) => {
+            const isYou = member.userId === session.user.id
+            return (
+              <div key={member.id} className="flex items-center justify-between px-4 py-3">
+                <span className="min-w-0 pr-3">
+                  <span className="block truncate text-sm font-medium">
+                    {member.userName}
+                    {isYou && <span className="text-muted-foreground font-normal"> (Você)</span>}
+                  </span>
+                  <span className="block truncate text-xs text-muted-foreground">{member.userEmail}</span>
+                </span>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                  {roleLabel[member.role] ?? member.role}
+                </span>
+              </div>
+            )
+          })}
         </div>
 
-        {admin && (
-          <div>
-            <h3 className="text-sm font-medium mb-3">Convidar membro</h3>
-            <InviteMemberForm workspaceId={currentWorkspace.id} />
-          </div>
-        )}
       </section>
+
+      {admin && (
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">Convidar membro</h2>
+          <InviteMemberForm workspaceId={currentWorkspace.id} />
+        </section>
+      )}
+
     </div>
   )
 }
